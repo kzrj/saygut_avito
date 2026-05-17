@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from app.domain.entities.listing import Listing
@@ -39,7 +38,7 @@ class CreateListing:
 
         now = datetime.utcnow()
         listing = Listing(
-            id=str(uuid.uuid4()),
+            id="",
             seller_id=seller_id,
             title=title.strip(),
             description=description.strip(),

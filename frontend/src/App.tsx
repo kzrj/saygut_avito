@@ -21,7 +21,11 @@ export default function App() {
   }, [init]);
 
   if (!initialized) {
-    return <div className="loading">Загрузка…</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400 font-medium">
+        Загрузка…
+      </div>
+    );
   }
 
   return (

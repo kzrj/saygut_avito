@@ -13,6 +13,7 @@ interface AuthState {
     email?: string;
     phone?: string;
     password: string;
+    password_confirm?: string;
     display_name?: string;
     referral_code?: string;
   }) => Promise<void>;

@@ -3,15 +3,20 @@ from pydantic import BaseModel, EmailStr, Field, model_validator
 
 class RegisterRequest(BaseModel):
     email: EmailStr | None = None
-    phone: str | None = None
-    password: str = Field(min_length=6)
-    display_name: str | None = None
-    referral_code: str | None = None
+    phone: str | None = Field(default=None, min_length=10, max_length=20)
+    password: str = Field(min_length=6, max_length=128)
+    password_confirm: str | None = Field(default=None, min_length=6)
+    display_name: str | None = Field(default=None, max_length=100)
+    referral_code: str | None = Field(default=None, max_length=20)
 
     @model_validator(mode="after")
-    def require_login(self) -> "RegisterRequest":
+    def validate_register(self) -> "RegisterRequest":
         if not self.email and not self.phone:
-            raise ValueError("Email or phone is required")
+            raise ValueError("Укажите email или телефон")
+        if self.password_confirm is not None and self.password != self.password_confirm:
+            raise ValueError("Пароли не совпадают")
+        if self.referral_code:
+            self.referral_code = self.referral_code.strip().upper()
         return self
 
 

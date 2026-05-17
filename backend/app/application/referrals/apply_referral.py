@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from app.domain.entities.referral import Referral
@@ -35,7 +34,7 @@ class ApplyReferral:
         await self._users.save(user)
 
         referral = Referral(
-            id=str(uuid.uuid4()),
+            id="",
             referrer_id=referrer.id,
             referred_user_id=new_user_id,
             status=ReferralStatus.PENDING,

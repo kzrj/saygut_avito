@@ -57,9 +57,18 @@ async def domain_error_handler(_request: Request, exc: DomainError):
 
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(_request: Request, exc: RequestValidationError):
+    messages: list[str] = []
+    for err in exc.errors():
+        msg = err.get("msg", "Ошибка валидации")
+        if msg.startswith("Value error, "):
+            msg = msg.removeprefix("Value error, ")
+        messages.append(msg)
     return JSONResponse(
         status_code=422,
-        content={"code": "validation_error", "message": str(exc.errors())},
+        content={
+            "code": "validation_error",
+            "message": "; ".join(messages) if messages else "Ошибка валидации",
+        },
     )
 
 

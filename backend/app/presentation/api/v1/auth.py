@@ -22,7 +22,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def register(request: Request, body: RegisterRequest):
     try:
         tokens, user = await container.register_user.execute(
-            email=body.email,
+            email=str(body.email) if body.email else None,
             phone=body.phone,
             password=body.password,
             display_name=body.display_name,
@@ -31,7 +31,7 @@ async def register(request: Request, body: RegisterRequest):
     except DomainError as e:
         from fastapi import HTTPException
 
-        status_code = 409 if e.code == "conflict" else 400
+        status_code = {"conflict": 409, "validation_error": 422}.get(e.code, 400)
         raise HTTPException(status_code=status_code, detail=e.message) from e
     return AuthResponse(
         access_token=tokens.access_token,

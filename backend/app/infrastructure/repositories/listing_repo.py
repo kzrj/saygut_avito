@@ -10,34 +10,43 @@ from app.infrastructure.db.mappers import listing_to_entity
 
 
 class MongoListingRepository(ListingRepository):
+    def _listing_fields(self, listing: Listing) -> dict:
+        return {
+            "seller_id": listing.seller_id,
+            "title": listing.title,
+            "description": listing.description,
+            "category_id": listing.category_id,
+            "images": listing.images,
+            "price_coins": listing.price_coins,
+            "price_mode": listing.price_mode,
+            "status": listing.status,
+            "auction": listing.auction,
+            "listing_fee_tx_id": listing.listing_fee_tx_id,
+            "reserved_for_deal_id": listing.reserved_for_deal_id,
+            "metadata": listing.metadata,
+            "created_at": listing.created_at,
+            "published_at": listing.published_at,
+            "sold_at": listing.sold_at,
+        }
+
     async def get_by_id(self, listing_id: str) -> Listing | None:
         doc = await ListingDoc.get(PydanticObjectId(listing_id))
         return listing_to_entity(doc) if doc else None
 
     async def save(self, listing: Listing) -> Listing:
-        oid = PydanticObjectId(listing.id) if listing.id else None
-        if oid:
-            doc = await ListingDoc.get(oid)
-            if not doc:
-                doc = ListingDoc(id=oid)
-        else:
-            doc = ListingDoc()
+        doc = None
+        if listing.id:
+            try:
+                doc = await ListingDoc.get(PydanticObjectId(listing.id))
+            except Exception:
+                doc = None
 
-        doc.seller_id = listing.seller_id
-        doc.title = listing.title
-        doc.description = listing.description
-        doc.category_id = listing.category_id
-        doc.images = listing.images
-        doc.price_coins = listing.price_coins
-        doc.price_mode = listing.price_mode
-        doc.status = listing.status
-        doc.auction = listing.auction
-        doc.listing_fee_tx_id = listing.listing_fee_tx_id
-        doc.reserved_for_deal_id = listing.reserved_for_deal_id
-        doc.metadata = listing.metadata
-        doc.created_at = listing.created_at
-        doc.published_at = listing.published_at
-        doc.sold_at = listing.sold_at
+        if doc is None:
+            doc = ListingDoc(**self._listing_fields(listing))
+        else:
+            for key, value in self._listing_fields(listing).items():
+                setattr(doc, key, value)
+
         await doc.save()
         return listing_to_entity(doc)
 

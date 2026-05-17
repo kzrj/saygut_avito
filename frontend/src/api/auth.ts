@@ -5,6 +5,7 @@ export function register(data: {
   email?: string;
   phone?: string;
   password: string;
+  password_confirm?: string;
   display_name?: string;
   referral_code?: string;
 }) {

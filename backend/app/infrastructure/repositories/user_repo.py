@@ -26,15 +26,7 @@ class MongoUserRepository(UserRepository):
         doc = await UserDoc.find_one(UserDoc.referral_code == code.upper())
         return user_to_entity(doc) if doc else None
 
-    async def save(self, user: User) -> User:
-        oid = PydanticObjectId(user.id) if user.id else None
-        if oid:
-            doc = await UserDoc.get(oid)
-            if not doc:
-                doc = UserDoc(id=oid)
-        else:
-            doc = UserDoc()
-
+    def _apply_user_fields(self, doc: UserDoc, user: User) -> None:
         doc.email = user.email.lower() if user.email else None
         doc.phone = user.phone
         doc.password_hash = user.password_hash
@@ -51,6 +43,38 @@ class MongoUserRepository(UserRepository):
         doc.updated_at = datetime.utcnow()
         if not doc.created_at:
             doc.created_at = user.created_at
+
+    async def save(self, user: User) -> User:
+        doc = None
+        if user.id:
+            try:
+                doc = await UserDoc.get(PydanticObjectId(user.id))
+            except Exception:
+                doc = None
+
+        if doc is None:
+            doc = UserDoc(
+                email=user.email.lower() if user.email else None,
+                phone=user.phone,
+                password_hash=user.password_hash,
+                display_name=user.display_name,
+                wallet_balance=user.wallet_balance,
+                referral_code=user.referral_code,
+                referred_by_id=user.referred_by_id,
+                identities=[
+                    IdentityEmbedded(
+                        provider=i.provider, external_id=i.external_id, meta=i.meta
+                    )
+                    for i in user.identities
+                ],
+                role=user.role,
+                status=user.status,
+                created_at=user.created_at,
+                updated_at=datetime.utcnow(),
+            )
+        else:
+            self._apply_user_fields(doc, user)
+
         await doc.save()
         return user_to_entity(doc)
 

@@ -31,4 +31,5 @@ class UserDoc(Document):
         indexes = [
             IndexModel([("email", ASCENDING)], unique=True, sparse=True),
             IndexModel([("phone", ASCENDING)], unique=True, sparse=True),
+            IndexModel([("referral_code", ASCENDING)], unique=True),
         ]

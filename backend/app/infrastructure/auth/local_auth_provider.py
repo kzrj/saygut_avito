@@ -1,6 +1,6 @@
+import re
 import secrets
 import string
-import uuid
 from datetime import datetime
 
 from app.domain.entities.user import User
@@ -14,6 +14,17 @@ from app.infrastructure.auth.password_hasher import hash_password, verify_passwo
 def _generate_referral_code() -> str:
     alphabet = string.ascii_uppercase + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(8))
+
+
+def _normalize_phone(phone: str) -> str:
+    cleaned = re.sub(r"[^\d+]", "", phone.strip())
+    if cleaned.startswith("8") and len(cleaned) == 11:
+        return "+7" + cleaned[1:]
+    if cleaned.startswith("7") and len(cleaned) == 11:
+        return "+" + cleaned
+    if cleaned and not cleaned.startswith("+"):
+        return "+" + cleaned
+    return cleaned
 
 
 class LocalAuthProvider(AuthProvider):
@@ -42,20 +53,25 @@ class LocalAuthProvider(AuthProvider):
             existing = await self._users.get_by_email(credentials.email)
             if existing:
                 raise ConflictError("Email already registered")
-        if credentials.phone:
-            existing = await self._users.get_by_phone(credentials.phone)
+        phone = _normalize_phone(credentials.phone) if credentials.phone else None
+        if phone:
+            if len(re.sub(r"\D", "", phone)) < 10:
+                raise ValidationError("Invalid phone number")
+            existing = await self._users.get_by_phone(phone)
             if existing:
                 raise ConflictError("Phone already registered")
 
+        referral_code = await self._unique_referral_code()
+
         now = datetime.utcnow()
-        external_id = (credentials.email or credentials.phone or "").lower()
+        external_id = (credentials.email or phone or "").lower()
         user = User(
-            id=str(uuid.uuid4()),
+            id="",
             email=credentials.email.lower() if credentials.email else None,
-            phone=credentials.phone,
+            phone=phone,
             display_name=display_name or external_id,
             wallet_balance=0,
-            referral_code=_generate_referral_code(),
+            referral_code=referral_code,
             referred_by_id=None,
             identities=[
                 AuthIdentity(
@@ -72,9 +88,17 @@ class LocalAuthProvider(AuthProvider):
         )
         return await self._users.save(user)
 
+    async def _unique_referral_code(self) -> str:
+        for _ in range(10):
+            code = _generate_referral_code()
+            if not await self._users.get_by_referral_code(code):
+                return code
+        raise ConflictError("Could not generate referral code")
+
     async def _find_by_login(self, credentials: AuthCredentials) -> User | None:
         if credentials.email:
             return await self._users.get_by_email(credentials.email)
         if credentials.phone:
-            return await self._users.get_by_phone(credentials.phone)
+            phone = _normalize_phone(credentials.phone)
+            return await self._users.get_by_phone(phone)
         return None

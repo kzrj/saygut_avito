@@ -82,11 +82,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const message =
-      typeof data.detail === "string"
-        ? data.detail
-        : data.message || response.statusText;
-    throw new ApiError(message, response.status, data.code);
+    let message = response.statusText;
+    if (typeof data.message === "string") {
+      message = data.message;
+    } else if (typeof data.detail === "string") {
+      message = data.detail;
+    } else if (Array.isArray(data.detail)) {
+      message = data.detail
+        .map((item: { msg?: string }) => item.msg?.replace(/^Value error, /, "") ?? "")
+        .filter(Boolean)
+        .join("; ");
+    }
+    throw new ApiError(message || "Ошибка запроса", response.status, data.code);
   }
   return data as T;
 }
