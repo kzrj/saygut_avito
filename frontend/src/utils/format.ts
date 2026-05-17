@@ -1,3 +1,7 @@
+export function formatPriceRub(amount: number): string {
+  return `${amount.toLocaleString("ru-RU")} ₽`;
+}
+
 export function formatRelativeTime(iso: string): string {
   const date = new Date(iso);
   const diff = Date.now() - date.getTime();

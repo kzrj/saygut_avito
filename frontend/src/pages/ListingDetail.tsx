@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Coins, Clock } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useListingStore } from "@/store/listingStore";
-import { formatRelativeTime } from "@/utils/format";
+import { formatPriceRub, formatRelativeTime } from "@/utils/format";
 
 export function ListingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -68,9 +68,8 @@ export function ListingDetail() {
             {listing.title}
           </h1>
           <div className="flex flex-wrap items-center gap-4 mb-6">
-            <span className="inline-flex items-center gap-2 text-2xl font-bold text-amber-600">
-              <Coins className="h-7 w-7" />
-              {listing.price_coins.toLocaleString("ru-RU")} монет
+            <span className="text-2xl font-bold text-slate-900">
+              {formatPriceRub(listing.price_coins)}
             </span>
             <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-400">
               <Clock className="h-3.5 w-3.5" />

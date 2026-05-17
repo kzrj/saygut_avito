@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { Clock, Coins } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Listing } from "@/types";
-import { formatRelativeTime } from "@/utils/format";
+import { formatPriceRub, formatRelativeTime } from "@/utils/format";
 
 interface Props {
   listing: Listing;
@@ -29,10 +29,8 @@ export function ListingCard({ listing }: Props) {
           )}
         </CardContent>
         <CardFooter className="p-5 flex flex-col items-start gap-1 flex-1 border-0 bg-transparent">
-          <div className="flex items-center gap-1.5 text-xl font-bold text-slate-900 leading-none mb-1">
-            <Coins className="h-5 w-5 text-amber-500" />
-            {listing.price_coins.toLocaleString("ru-RU")}
-            <span className="text-sm font-semibold text-amber-600">монет</span>
+          <div className="text-xl font-bold text-slate-900 leading-none mb-1">
+            {formatPriceRub(listing.price_coins)}
           </div>
           <h3 className="text-sm text-slate-600 font-medium line-clamp-2 w-full group-hover:text-primary transition-colors">
             {listing.title}

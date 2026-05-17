@@ -12,7 +12,7 @@ const inputClass = "h-11 rounded-xl bg-slate-50 border-slate-200";
 export function CreateListing() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [priceCoins, setPriceCoins] = useState(100);
+  const [priceRub, setPriceRub] = useState(100);
   const [categoryId, setCategoryId] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const categories = useListingStore((s) => s.categories);
@@ -34,7 +34,7 @@ export function CreateListing() {
       const listing = await createAndPublish({
         title,
         description,
-        price_coins: priceCoins,
+        price_coins: priceRub,
         category_id: categoryId || undefined,
         files: files.length ? files : undefined,
       });
@@ -73,12 +73,12 @@ export function CreateListing() {
           />
         </FormField>
 
-        <FormField label="Цена (монеты)">
+        <FormField label="Цена, ₽">
           <Input
             type="number"
             min={1}
-            value={priceCoins}
-            onChange={(e) => setPriceCoins(Number(e.target.value))}
+            value={priceRub}
+            onChange={(e) => setPriceRub(Number(e.target.value))}
             required
             className={inputClass}
           />
